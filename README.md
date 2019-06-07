@@ -28,6 +28,8 @@ python -m spectre
 
 Install
 -------
+At first, install [portaudio](http://www.portaudio.com).
+Then,
 ```bash
 python -m pip install git+https://github.com/sakura067m/sample_pyaudio_stft.git
 ```

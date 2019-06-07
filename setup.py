@@ -1,11 +1,11 @@
 from setuptools import setup
 
-requirements = {
+requirements = [
     "numpy",
     "matplotlib",
     "PyQt5",
     "pyaudio",
-}
+]
 
 setup(
     name="spectre",

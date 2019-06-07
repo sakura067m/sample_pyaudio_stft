@@ -1,6 +1,6 @@
 from setuptools import setup
 
-rewuirements = {
+requirements = {
     "numpy",
     "matplotlib",
     "PyQt5",

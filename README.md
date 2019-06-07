@@ -12,8 +12,8 @@ Requirements
 * matplotlib
 
 
-recomend:
-* scipy  # easy STFT
+recommend:
+* scipy  # easy STFT; see [test3.py](./test3.py)
 
 Usage
 -----

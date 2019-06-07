@@ -13,7 +13,7 @@ Requirements
 
 
 recommend:
-* scipy  # easy STFT; see [test3.py](./test3.py)
+* scipy  # easy STFT; see [test2.py](./test2.py)
 
 Usage
 -----

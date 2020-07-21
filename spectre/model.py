@@ -10,14 +10,19 @@ last_data=None
 
 class RealTimeSTFT(Spectre):
 
+    def __init__(self, fs, nfft=512, marker_size=2, parent=None):
+       super().__init__(fs, nfft, marker_size, parent)
+       
+
     def start_stream(self):
         p = pyaudio.PyAudio()
         self.p = p
         stream = p.open(format=pyaudio.paInt16,
-                        channels = 1,
                         rate = self.fs,
+                        channels = 1,
                         frames_per_buffer = self.nfft,
                         input = True,
+                        input_device_index = 2,
                         output = False,
                         stream_callback=self.fft
                         )
@@ -32,9 +37,14 @@ class RealTimeSTFT(Spectre):
 
 
     def fft(self,in_data, frame_count, time_info, status):
-        if self.nfft > frame_count: return (None, pyaudio.paContinue)
+        if self.nfft > frame_count:
+            self._data[:,1] = 0
+            self._l.set_offsets(self._data)
+            self.draw()
+            return (None, pyaudio.paContinue)
         ct = time_info["current_time"]
-        if ct-self.t>1/60:
+##        if ct-self.t>1/60:
+        if True:
             self.t = ct
             try:
                 data = np.frombuffer(in_data, dtype=np.int16)
@@ -62,7 +72,7 @@ class RealTimeSTFT(Spectre):
             self._data[:,1] = a
             self._l.set_offsets(self._data)
             self.draw()
-
+##        print(ct, self.t, any(in_data), len(in_data),time_info)
         return (None, pyaudio.paContinue)
 
     @classmethod

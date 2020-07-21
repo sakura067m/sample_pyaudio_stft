@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 
 class Spectre(FigureCanvas):
 
-    def __init__(self, fs, nfft=512, parent=None):
+    def __init__(self, fs, nfft=512, marker_size=None, parent=None):
         figure = plt.figure()
         super().__init__(figure)
         self.fs = fs
@@ -29,7 +29,7 @@ class Spectre(FigureCanvas):
         data = np.zeros((nyq,2), dtype=np.float64)
         self._data = data
         data[:,0] = np.linspace(0,fs//2,num=nyq)
-        self._l = ax.scatter(data[:,0],data[:,1])
+        self._l = ax.scatter(data[:,0],data[:,1], s=marker_size)
 
         self.show()
 

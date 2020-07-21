@@ -19,9 +19,9 @@ class Spectre(FigureCanvas):
         self.axis = ax
         ax.set_xscale("log")
         ax.set_xlim([10,fs//2])
-        self._ymin = -100
+        self._ymin = 0
         self._ymax = 100
-        ax.set_ylim([-100, 100])
+        ax.set_ylim([0, 100])
 
         nyq = nfft//2
         self.nyq=nyq

@@ -1,10 +1,12 @@
-import numpy as np
+from . import np, getLogger
 import pyaudio
 
+logger = getLogger(__name__)
 fft = np.fft.fft
 
 from .view import Spectre
 from PyQt5.QtWidgets import QApplication
+from time import time
 
 last_data=None
 
@@ -38,13 +40,14 @@ class RealTimeSTFT(Spectre):
 
     def fft(self,in_data, frame_count, time_info, status):
         if self.nfft > frame_count:
-            self._data[:,1] = 0
-            self._l.set_offsets(self._data)
-            self.draw()
+##            self._data[:,1] = 0
+##            self._l.set_offsets(self._data)
+##            self.draw()
             return (None, pyaudio.paContinue)
-        ct = time_info["current_time"]
-##        if ct-self.t>1/60:
-        if True:
+##        ct = time_info["current_time"]
+        ct = time()
+        if ct-self.t>1/60:
+##        if True:
             self.t = ct
             try:
                 data = np.frombuffer(in_data, dtype=np.int16)
@@ -53,7 +56,7 @@ class RealTimeSTFT(Spectre):
                 global last_data
                 last_data = in_data
                 raise
-            a = 20*np.log(np.abs(z))[:self.nyq]
+            a = 20*np.log10(np.abs(z))[:self.nyq]
             b = a[np.isfinite(a)]
             ymin = np.min(b)
             ymax = np.max(b)
@@ -76,9 +79,9 @@ class RealTimeSTFT(Spectre):
         return (None, pyaudio.paContinue)
 
     @classmethod
-    def go(cls, fs, nfft=4096, argv=[]):
+    def go(cls, fs, nfft=4096, marker_size=2, argv=[], **args):
         app = QApplication(argv)
-        me = RealTimeSTFT(fs, nfft)
+        me = RealTimeSTFT(fs, nfft, marker_size)
         app.aboutToQuit.connect(me.on_quit)
         me.show()
         me.start_stream()

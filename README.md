@@ -2,6 +2,7 @@ SPECTRE
 =======
 
 ![overview](images/screenshot_mac.png)
+![overview windows](images/screenshot_windows.png)
 
 
 Requirements
@@ -23,6 +24,22 @@ spectre
 or
 ```bash
 python -m spectre
+```
+
+v1.1:
+Add support for command line argument!
+```bash
+usage: spectre [-h] [-f FS] [-w NFFT] [-s MARKER_SIZE] [-v]
+
+spectrum analyzer
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f FS, --fs FS        sampling rate
+  -w NFFT, --nfft NFFT  window size
+  -s MARKER_SIZE, --marker_size MARKER_SIZE
+                        marker size
+  -v, --verbose         increase out put
 ```
 
 

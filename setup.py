@@ -9,7 +9,7 @@ requirements = [
 
 setup(
     name="spectre",
-    version="1.0.0",
+    version="1.1.0",
     description="show the spectre with your mic",
     url="https://github.com/sakura067m/sample_pyaudio_stft",
     author="sakura067m",

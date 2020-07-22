@@ -1,3 +1,4 @@
+import sys
 from . import np, getLogger
 import pyaudio
 
@@ -8,27 +9,40 @@ from .view import Spectre
 from PyQt5.QtWidgets import QApplication
 from time import time
 
-last_data=None
+tmp = ">i{}" if sys.byteorder=="big" else "<i{}"
 
 class RealTimeSTFT(Spectre):
 
-    def __init__(self, fs, nfft=512, marker_size=2, parent=None):
-       super().__init__(fs, nfft, marker_size, parent)
+    def __init__(self, fs, byte_depth=2, device=0, nfft=512, marker_size=2, parent=None):
+        super().__init__(fs, nfft, marker_size, parent)
+        self.byte_depth = byte_depth
+        if 3 == byte_depth:
+            self.samplewidth = 2
+            self.crop = 1
+        else:
+            self.samplewidth = byte_depth
+            self.crop = 0
+        self.fmt = tmp.format(self.samplewidth)
+        self.device_index = device
        
 
     def start_stream(self):
         p = pyaudio.PyAudio()
         self.p = p
-        stream = p.open(format=pyaudio.paInt16,
+        stream = p.open(format=pyaudio.get_format_from_width(self.samplewidth,
+                                                             unsigned=False
+                                                             ),
                         rate = self.fs,
                         channels = 1,
                         frames_per_buffer = self.nfft,
                         input = True,
-                        input_device_index = 2,
+                        input_device_index = self.device_index,
                         output = False,
                         stream_callback=self.fft
                         )
         self.stream = stream
+        p_info = p.get_device_info_by_index(2)
+        logger.info("device: %s", p_info["name"])
 
 
     def on_quit(self):
@@ -39,49 +53,31 @@ class RealTimeSTFT(Spectre):
 
 
     def fft(self,in_data, frame_count, time_info, status):
-        if self.nfft > frame_count:
-##            self._data[:,1] = 0
-##            self._l.set_offsets(self._data)
-##            self.draw()
+        if pyaudio.paInputUnderflow == status:
+            self.silent()
             return (None, pyaudio.paContinue)
 ##        ct = time_info["current_time"]
         ct = time()
-        if ct-self.t>1/60:
-##        if True:
+        if ct-self.t>1/30:
             self.t = ct
-            try:
-                data = np.frombuffer(in_data, dtype=np.int16)
-                z = fft(data[:self.nfft])
-            except:
-                global last_data
-                last_data = in_data
-                raise
-            a = 20*np.log10(np.abs(z))[:self.nyq]
-            b = a[np.isfinite(a)]
-            ymin = np.min(b)
-            ymax = np.max(b)
-            if ymin < self._ymin:
-                self._ymin = ymin
-                if ymax > self._ymax:
-                    self._ymax = ymax
-                    self.axis.set_ylim(ymin,ymax)
-                else:
-                    self.axis.set_ylim(bottom=ymin)
-            elif ymax > self._ymax:
-                self._ymax = ymax
-                self.axis.set_ylim(top=ymax)
 
-
-            self._data[:,1] = a
-            self._l.set_offsets(self._data)
-            self.draw()
-##        print(ct, self.t, any(in_data), len(in_data),time_info)
+            data = np.ndarray((frame_count,),
+                             dtype=self.fmt,
+                             buffer=in_data
+                             )
+            z = fft(data, self.nfft)
+            a = 20*np.log10(np.abs(z[:self.nyq]))
+            if not np.isfinite(a).all():
+                self.silent()
+                return (None, pyaudio.paContinue)
+            if self.isSilent: self.working()
+            self.update_with(a)
         return (None, pyaudio.paContinue)
 
     @classmethod
-    def go(cls, fs, nfft=4096, marker_size=2, argv=[], **args):
+    def go(cls, fs, byte_depth=2, device=0, nfft=4096, marker_size=2, argv=[], **etc):
         app = QApplication(argv)
-        me = RealTimeSTFT(fs, nfft, marker_size)
+        me = RealTimeSTFT(fs, byte_depth, device, nfft, marker_size)
         app.aboutToQuit.connect(me.on_quit)
         me.show()
         me.start_stream()
@@ -89,5 +85,4 @@ class RealTimeSTFT(Spectre):
 
 
 if __name__ == "__main__":
-    import sys
     sys.exit(RealTimeSTFT(44100, argv=sys.argv()))

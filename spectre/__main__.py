@@ -9,7 +9,9 @@ spectrum analyzer
 """
 
 def main():
-    parser = ArgumentParser(description=description)
+    parser = ArgumentParser(prog="spectre",
+                            description=description
+                            )
     parser.add_argument("-f", '--fs',
                         help='sampling rate',
                         type=int,

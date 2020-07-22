@@ -17,7 +17,7 @@ class RealTimeSTFT(Spectre):
         super().__init__(fs, nfft, marker_size, parent)
         self.byte_depth = byte_depth
         if 3 == byte_depth:
-            self.samplewidth = 2
+            self.samplewidth = 4
             self.crop = 1
         else:
             self.samplewidth = byte_depth
@@ -61,11 +61,22 @@ class RealTimeSTFT(Spectre):
         if ct-self.t>1/30:
             self.t = ct
 
-            data = np.ndarray((frame_count,),
-                             dtype=self.fmt,
-                             buffer=in_data
-                             )
-            z = fft(data, self.nfft)
+            data = np.frombuffer(in_data, 'b').reshape(-1, self.samplewidth)
+##            data = np.ndarray((frame_count,),
+##                              dtype=self.fmt,
+##                              buffer=in_data
+##                              )
+            if (data==0).all(axis=1).sum() > frame_count//4*3:
+                self.silent()
+                return (None, pyaudio.paContinue)
+            # print(data[:10])
+            if self.crop:
+                data = np.roll(data, -1, axis=1).view(self.fmt).ravel()
+##                data = data.view(self.fmt).ravel()
+                z = fft(data>>8, self.nfft)
+            else:
+                z = fft(data.view(self.fmt).ravel(), self.nfft)
+            
             a = 20*np.log10(np.abs(z[:self.nyq]))
             if not np.isfinite(a).all():
                 self.silent()
